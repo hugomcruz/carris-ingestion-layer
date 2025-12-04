@@ -140,7 +140,7 @@ class TripTransitionDetector:
                     f"trip:{transition.previous_trip_id}:{transition.previous_service_date}:completion",
                     mapping=trip_completion.to_redis_dict()
                 )
-                pipe.expire(f"trip:{transition.previous_trip_id}:{transition.previous_service_date}:completion", 86400)  # 24 hours
+                # No TTL - keep completion data permanently
                 
                 logger.info(
                     f"Trip {transition.previous_trip_id} ({transition.previous_service_date}) completed: "

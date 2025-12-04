@@ -370,9 +370,9 @@ class DataPublisher:
                         # Store completion metrics
                         pipe.hset(
                             f"trip:{item['trip_id']}:completion",
-                            mapping=trip_completion.to_redis_dict()
+                            mapping=completion.to_redis_dict()
                         )
-                        pipe.expire(f"trip:{item['trip_id']}:completion", 86400)  # 24 hours
+                        # No TTL - keep completion data permanently
                         
                         # Mark trip as completed
                         pipe.set(f"trip:{item['trip_id']}:status", "completed")
