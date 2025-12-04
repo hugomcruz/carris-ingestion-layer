@@ -1,0 +1,23 @@
+# FastAPI and server
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+pydantic==2.9.0
+pydantic-settings==2.5.0
+
+# HTTP client
+httpx==0.25.2
+
+# Redis
+redis==5.0.1
+
+# Database (PostgreSQL for GTFS static data)
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.29.0
+
+# Protobuf for GTFS
+gtfs-realtime-bindings==1.0.0
+protobuf==4.25.1
+
+# Utilities
+python-dotenv==1.0.0
+pytz==2024.1

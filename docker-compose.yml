@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  # Ingestion service
+  ingestion:
+    build: .
+    container_name: carris-ingestion
+    ports:
+      - "8000:8000"
+    environment:
+      - GTFS_API_URL=https://gateway.carris.pt/gateway/gtfs/api/v2.11/GTFS/realtime/vehiclepositions
+      - POLL_INTERVAL_SECONDS=30
+      - REDIS_HOST=blogs.berzuk.com
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
