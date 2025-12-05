@@ -365,7 +365,7 @@ class DataPublisher:
                         trip_id=item['trip_id'],
                         service_date=item.get('service_date'),
                         vehicle_id=item['vehicle_id'],
-                        completion_method=\"INACTIVITY\"
+                        completion_method="INACTIVITY"
                     )
                     
                     if trip_completion:
