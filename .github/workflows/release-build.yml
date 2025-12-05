@@ -1,7 +1,8 @@
 name: RELEASE - Multi-arch Build & Push to Harbor
 
 on:
-  workflow_dispatch:
+  release:
+    types: [published]
   
 
 env:
