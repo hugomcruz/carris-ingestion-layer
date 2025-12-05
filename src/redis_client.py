@@ -20,7 +20,7 @@ class RedisClient:
     1. Latest Vehicle State: vehicle:{vehicle_id} -> HASH
     2. Active Trip Track: trip:{trip_id}:{service_date}:track -> STREAM
     3. Activity Index: active_vehicles -> SET
-    4. Trip Status: trip:{trip_id}:{service_date}:status -> STRING with TTL
+    4. Trip Status: trip:{trip_id}:{service_date}:status -> STRING (no TTL)
     """
     
     def __init__(self, redis_url: str):
@@ -136,18 +136,17 @@ class RedisClient:
         """Check if vehicle is in active set"""
         return await self.client.sismember("active_vehicles", vehicle_id)
     
-    # Trip Status Operations (STRING with TTL)
+    # Trip Status Operations (STRING - no TTL)
     
     async def set_trip_status(
         self, 
         trip_id: str,
         service_date: str,
-        status: str = "active",
-        ttl_seconds: int = 3600
+        status: str = "active"
     ):
-        """Set trip status with TTL"""
+        """Set trip status (no TTL, permanent storage)"""
         key = f"trip:{trip_id}:{service_date}:status"
-        await self.client.setex(key, ttl_seconds, status)
+        await self.client.set(key, status)
         logger.debug(f"Set trip status: {trip_id} ({service_date}) -> {status}")
     
     async def get_trip_status(self, trip_id: str, service_date: str) -> Optional[str]:

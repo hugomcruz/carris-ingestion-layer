@@ -86,8 +86,7 @@ class TripTransitionDetector:
                     state_snapshot_key,
                     mapping=previous_state
                 )
-                # Set expiry to 1 hour in case cleanup fails
-                await self.redis_client.client.expire(state_snapshot_key, 3600)
+                # No TTL - keep state snapshots permanently
             except Exception as e:
                 logger.error(f"Failed to save vehicle state snapshot: {e}")
                 state_snapshot_key = None
