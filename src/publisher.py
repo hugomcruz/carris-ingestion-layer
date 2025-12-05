@@ -340,10 +340,12 @@ class DataPublisher:
                     # If inactive for > 1 hour and has a trip, complete it
                     if time_since_update > one_hour:
                         trip_id = vehicle_state.get('trip_id')
+                        service_date = vehicle_state.get('service_date')
                         if trip_id:
                             trip_completion_needed.append({
                                 'vehicle_id': vehicle_id,
                                 'trip_id': trip_id,
+                                'service_date': service_date,
                                 'inactive_duration': time_since_update
                             })
                     
@@ -361,49 +363,63 @@ class DataPublisher:
                 try:
                     trip_completion = await self.trip_detector._calculate_trip_metrics(
                         trip_id=item['trip_id'],
-                        vehicle_id=item['vehicle_id']
+                        service_date=item.get('service_date'),
+                        vehicle_id=item['vehicle_id'],
+                        completion_method=\"INACTIVITY\"
                     )
                     
                     if trip_completion:
                         pipe = self.redis_client.client.pipeline()
                         
+                        service_date = item.get('service_date') or trip_completion.service_date
+                        
                         # Store completion metrics
                         pipe.hset(
-                            f"trip:{item['trip_id']}:completion",
-                            mapping=completion.to_redis_dict()
+                            f"trip:{item['trip_id']}:{service_date}:completion",
+                            mapping=trip_completion.to_redis_dict()
                         )
                         # No TTL - keep completion data permanently
                         
                         # Mark trip as completed
-                        pipe.set(f"trip:{item['trip_id']}:status", "completed")
+                        pipe.set(f"trip:{item['trip_id']}:{service_date}:status", "completed")
+                        
+                        # Delete vehicle state key and remove from active set
+                        pipe.delete(f"vehicle:{item['vehicle_id']}")
+                        pipe.srem("active_vehicles", item['vehicle_id'])
                         
                         await pipe.execute()
                         
                         logger.info(
                             f"Completed trip {item['trip_id']} for inactive vehicle {item['vehicle_id']} "
-                            f"(inactive: {item['inactive_duration']}s, duration: {trip_completion.duration_seconds}s)"
+                            f"(inactive: {item['inactive_duration']}s, duration: {trip_completion.duration_seconds}s) "
+                            f"- vehicle state deleted"
                         )
                 except Exception as e:
                     logger.error(
                         f"Failed to complete trip {item['trip_id']} for vehicle {item['vehicle_id']}: {e}"
                     )
         
-        # Mark vehicles as inactive
+        # Mark remaining vehicles as inactive (those without trips or inactive < 1 hour)
+        # Vehicles with completed trips have already been deleted above
         if inactive_vehicles:
-            logger.info(f"Marking {len(inactive_vehicles)} vehicles as inactive")
+            vehicles_with_completed_trips = {item['vehicle_id'] for item in trip_completion_needed}
+            vehicles_to_mark_inactive = [v for v in inactive_vehicles if v not in vehicles_with_completed_trips]
             
-            # Use pipeline to update status field
-            pipe = self.redis_client.client.pipeline()
-            for vehicle_id in inactive_vehicles:
-                pipe.hset(f"vehicle:{vehicle_id}", "status", "inactive")
-            
-            try:
-                await pipe.execute()
-                logger.info(
-                    f"Marked {len(inactive_vehicles)} vehicles as inactive "
-                    f"(inactive for >{inactivity_timeout_seconds}s)"
-                )
-            except Exception as e:
-                logger.error(f"Failed to mark vehicles as inactive: {e}")
+            if vehicles_to_mark_inactive:
+                logger.info(f"Marking {len(vehicles_to_mark_inactive)} vehicles as inactive")
+                
+                # Use pipeline to update status field
+                pipe = self.redis_client.client.pipeline()
+                for vehicle_id in vehicles_to_mark_inactive:
+                    pipe.hset(f"vehicle:{vehicle_id}", "status", "inactive")
+                
+                try:
+                    await pipe.execute()
+                    logger.info(
+                        f"Marked {len(vehicles_to_mark_inactive)} vehicles as inactive "
+                        f"(inactive for >{inactivity_timeout_seconds}s)"
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to mark vehicles as inactive: {e}")
         else:
             logger.debug(f"No vehicles to mark inactive (checked {len(redis_active)} vehicles)")

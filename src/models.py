@@ -163,6 +163,7 @@ class TripCompletion(BaseModel):
     route_long_name: Optional[str] = None  # GTFS route long name
     scheduled_start_time: Optional[str] = None  # Scheduled departure time from GTFS
     scheduled_end_time: Optional[str] = None  # Scheduled arrival time from GTFS
+    completion_method: str = "UNKNOWN"  # TRANSITION, INACTIVITY, or UNKNOWN
     completed_at: datetime = Field(default_factory=datetime.utcnow)
     
     def to_redis_dict(self) -> dict:
@@ -181,5 +182,6 @@ class TripCompletion(BaseModel):
             "route_long_name": self.route_long_name or "",
             "scheduled_start_time": self.scheduled_start_time or "",
             "scheduled_end_time": self.scheduled_end_time or "",
+            "completion_method": self.completion_method,
             "completed_at": self.completed_at.isoformat(),
         }

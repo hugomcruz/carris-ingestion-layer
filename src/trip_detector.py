@@ -128,7 +128,8 @@ class TripTransitionDetector:
                 trip_id=transition.previous_trip_id,
                 service_date=transition.previous_service_date,
                 vehicle_id=transition.vehicle_id,
-                old_state_key=transition.previous_vehicle_state_key
+                old_state_key=transition.previous_vehicle_state_key,
+                completion_method="TRANSITION"
             )
             
             # Use pipeline for batch operations
@@ -173,7 +174,8 @@ class TripTransitionDetector:
         trip_id: str,
         service_date: Optional[str],
         vehicle_id: str,
-        old_state_key: Optional[str] = None
+        old_state_key: Optional[str] = None,
+        completion_method: str = "UNKNOWN"
     ) -> Optional[TripCompletion]:
         """
         Calculate trip completion metrics from trip track data
@@ -183,6 +185,7 @@ class TripTransitionDetector:
             service_date: The service date (YYYYMMDD) for the trip
             vehicle_id: The vehicle ID
             old_state_key: Optional Redis key for old vehicle state snapshot
+            completion_method: How the trip was completed (TRANSITION, INACTIVITY, or UNKNOWN)
             
         Returns:
             TripCompletion with calculated metrics, or None if no data
@@ -292,6 +295,7 @@ class TripTransitionDetector:
                 route_long_name=route_long_name,
                 scheduled_start_time=scheduled_start_time,
                 scheduled_end_time=scheduled_end_time,
+                completion_method=completion_method,
             )
             
         except Exception as e:
