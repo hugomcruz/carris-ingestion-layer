@@ -1,4 +1,4 @@
-name: Release - Multi-arch Build & Push to Harbor
+name: Build Run - Multi-arch Build & Push to Harbor
 
 on:
   workflow_dispatch:
