@@ -33,6 +33,7 @@ RUN pip install --no-cache-dir --no-index --find-links=/wheels /wheels/* && \
 
 # Copy only application code (no requirements.txt needed)
 COPY src/ ./src/
+COPY logging_config.json ./
 
 # Create non-root user
 RUN useradd -m -u 1000 -s /bin/false appuser && \
@@ -48,4 +49,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=2 \
     CMD python -c "import httpx; httpx.get('http://localhost:5000/health', timeout=3).raise_for_status()" || exit 1
 
 # Run with optimizations
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5000", "--workers", "1", "--log-level", "info"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5000", "--workers", "1", "--log-level", "info", "--log-config", "logging_config.json"]

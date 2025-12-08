@@ -265,20 +265,28 @@ class TripTransitionDetector:
                             route_short_name = route_info.get("route_short_name")
                             route_long_name = route_info.get("route_long_name")
                 
-                # Get scheduled times from stop_times
+                # Get scheduled times from stop_times and convert to timestamps
                 trip_stops = self.gtfs_enrichment.get_trip_stops(trip_id)
-                if trip_stops and len(trip_stops) > 0:
+                if trip_stops and len(trip_stops) > 0 and service_date:
+                    from src.utils import gtfs_time_to_timestamp
+                    
                     # First stop (stop_sequence=1 or minimum)
                     first_stop = min(trip_stops, key=lambda x: x.get("stop_sequence", 999999))
                     departure = first_stop.get("departure_time")
                     if departure:
-                        scheduled_start_time = str(departure) if not isinstance(departure, str) else departure
+                        departure_str = str(departure) if not isinstance(departure, str) else departure
+                        timestamp = gtfs_time_to_timestamp(departure_str, service_date)
+                        if timestamp:
+                            scheduled_start_time = str(timestamp)
                     
                     # Last stop (maximum stop_sequence)
                     last_stop = max(trip_stops, key=lambda x: x.get("stop_sequence", 0))
                     arrival = last_stop.get("arrival_time")
                     if arrival:
-                        scheduled_end_time = str(arrival) if not isinstance(arrival, str) else arrival
+                        arrival_str = str(arrival) if not isinstance(arrival, str) else arrival
+                        timestamp = gtfs_time_to_timestamp(arrival_str, service_date)
+                        if timestamp:
+                            scheduled_end_time = str(timestamp)
             
             return TripCompletion(
                 trip_id=trip_id,

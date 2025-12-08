@@ -192,11 +192,11 @@ redis-server
 
 4. **Run the application**
 ```bash
-# Development mode with auto-reload
-uvicorn src.main:app --reload
+# Development mode with auto-reload and custom logging
+uvicorn src.main:app --reload --log-config logging_config.json
 
 # Production mode
-uvicorn src.main:app --host 0.0.0.0 --port 8000
+uvicorn src.main:app --host 0.0.0.0 --port 8000 --log-config logging_config.json
 ```
 
 ### Docker Deployment

@@ -61,7 +61,8 @@ class VehicleState(BaseModel):
     timestamp: int
     current_status: Optional[str] = None
     stop_id: Optional[str] = None
-    last_updated: str  # ISO format datetime
+    current_stop_sequence: Optional[int] = None  # Current stop sequence number
+    last_updated: int  # Unix timestamp
     status: str = "active"  # active or inactive
     
     # GTFS enrichment fields
@@ -78,6 +79,11 @@ class VehicleState(BaseModel):
     shape_speed: Optional[float] = None  # Speed calculated from shape distance (m/s)
     service_date: Optional[str] = None  # YYYYMMDD format - persisted throughout trip
     
+    # Trip timing fields
+    scheduled_start_time: Optional[str] = None  # Scheduled departure timestamp (Unix timestamp as string)
+    scheduled_end_time: Optional[str] = None  # Scheduled arrival timestamp (Unix timestamp as string)
+    actual_start_time: Optional[str] = None  # Actual trip start timestamp (Unix timestamp as string)
+    
     def to_redis_dict(self) -> dict:
         """Convert to flat dictionary for Redis HASH"""
         return {
@@ -92,7 +98,8 @@ class VehicleState(BaseModel):
             "timestamp": str(self.timestamp),
             "current_status": self.current_status or "",
             "stop_id": self.stop_id or "",
-            "last_updated": self.last_updated,
+            "current_stop_sequence": str(self.current_stop_sequence) if self.current_stop_sequence is not None else "",
+            "last_updated": str(self.last_updated),
             "status": self.status,
             "route_short_name": self.route_short_name or "",
             "route_long_name": self.route_long_name or "",
@@ -104,6 +111,9 @@ class VehicleState(BaseModel):
             "two_shape_bearing": str(self.two_shape_bearing) if self.two_shape_bearing is not None else "",
             "shape_speed": str(self.shape_speed) if self.shape_speed is not None else "",
             "service_date": self.service_date or "",
+            "scheduled_start_time": self.scheduled_start_time or "",
+            "scheduled_end_time": self.scheduled_end_time or "",
+            "actual_start_time": self.actual_start_time or "",
         }
 
 
@@ -161,8 +171,8 @@ class TripCompletion(BaseModel):
     total_positions: int  # Total position records in the trip
     route_short_name: Optional[str] = None  # GTFS route short name
     route_long_name: Optional[str] = None  # GTFS route long name
-    scheduled_start_time: Optional[str] = None  # Scheduled departure time from GTFS
-    scheduled_end_time: Optional[str] = None  # Scheduled arrival time from GTFS
+    scheduled_start_time: Optional[str] = None  # Scheduled departure timestamp (Unix timestamp as string)
+    scheduled_end_time: Optional[str] = None  # Scheduled arrival timestamp (Unix timestamp as string)
     completion_method: str = "UNKNOWN"  # TRANSITION, INACTIVITY, or UNKNOWN
     completed_at: datetime = Field(default_factory=datetime.utcnow)
     

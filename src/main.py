@@ -12,7 +12,7 @@ from .ingestion_service import IngestionService
 # Configure logging
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper()),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - [%(levelname)s] - %(name)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -209,8 +209,8 @@ async def get_trip_completion(trip_id: str):
         - total_positions: Total position records
         - route_short_name: Route number/identifier
         - route_long_name: Route full name/description
-        - scheduled_start_time: Scheduled departure time from GTFS
-        - scheduled_end_time: Scheduled arrival time from GTFS
+        - scheduled_start_time: Scheduled departure time (Unix timestamp) from GTFS
+        - scheduled_end_time: Scheduled arrival time (Unix timestamp) from GTFS
         - completed_at: When the completion was recorded
     """
     completion = await ingestion_service.redis_client.get_trip_completion(trip_id)
