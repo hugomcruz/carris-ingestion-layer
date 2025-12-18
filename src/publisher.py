@@ -365,13 +365,8 @@ class DataPublisher:
             
             # Set actual_start_time when stop_sequence=1 is first encountered (ignore stop_sequence=0)
             if position.trip_id and position.stop_sequence == 1:
-                # Only set if not already set (first time at stop_sequence=1)
-                if old_state:
-                    old_actual_start = old_state.get('actual_start_time')
-                    if not old_actual_start:
-                        actual_start_time = str(position.timestamp)
-                else:
-                    # No old state, set it now
+                # Only set if not already set (first time at stop_sequence=1 for this trip)
+                if not actual_start_time:
                     actual_start_time = str(position.timestamp)
             
             # Create vehicle state
