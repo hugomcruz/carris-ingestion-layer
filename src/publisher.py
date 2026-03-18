@@ -440,13 +440,14 @@ class DataPublisher:
             logger.error(f"Failed to process position for vehicle {position.vehicle_id}: {e}")
             return None
     
-    async def cleanup_inactive_vehicles(self, inactivity_timeout_seconds: int):
+    async def cleanup_inactive_vehicles(self, inactivity_timeout_seconds: int, trip_close_timeout_seconds: int = 3600):
         """
         Mark vehicles that haven't reported within the timeout period as inactive
-        If inactive for > 1 hour, complete their active trips
+        If inactive for > trip_close_timeout_seconds, complete their active trips
         
         Args:
-            inactivity_timeout_seconds: Time in seconds after which a vehicle is considered inactive
+            inactivity_timeout_seconds: Time in seconds after which a vehicle is hidden (marked inactive)
+            trip_close_timeout_seconds: Time in seconds after which an inactive vehicle's trip is closed
         """
         # Get all active vehicles from Redis
         redis_active = await self.redis_client.get_active_vehicles()
@@ -456,8 +457,7 @@ class DataPublisher:
         
         current_time = int(time.time())
         inactive_vehicles = []
-        trip_completion_needed = []  # Vehicles inactive > 1 hour
-        one_hour = 3600
+        trip_completion_needed = []  # Vehicles inactive > trip_close_timeout_seconds
         
         # Check each vehicle's last update time
         for vehicle_id in redis_active:
@@ -478,8 +478,8 @@ class DataPublisher:
                 if time_since_update > inactivity_timeout_seconds:
                     inactive_vehicles.append(vehicle_id)
                     
-                    # If inactive for > 1 hour and has a trip, complete it
-                    if time_since_update > one_hour:
+                    # If inactive for > trip_close_timeout_seconds and has a trip, complete it
+                    if time_since_update > trip_close_timeout_seconds:
                         trip_id = vehicle_state.get('trip_id')
                         service_date = vehicle_state.get('service_date')
                         if trip_id:

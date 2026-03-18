@@ -155,7 +155,8 @@ class IngestionService:
         """
         logger.debug("Starting cleanup cycle")
         await self.publisher.cleanup_inactive_vehicles(
-            settings.vehicle_inactivity_timeout_seconds
+            settings.vehicle_inactivity_timeout_seconds,
+            settings.trip_close_timeout_seconds,
         )
     
     async def _gtfs_refresh_loop(self):

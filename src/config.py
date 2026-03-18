@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     
     # Vehicle Inactivity Timeout
     vehicle_inactivity_timeout_seconds: int = 180  # 3 minutes
+    trip_close_timeout_seconds: int = 3600  # 1 hour - trip marked completed after this inactivity
     
     # Database Configuration (GTFS Static Data)
     db_host: str = "localhost"
