@@ -242,6 +242,9 @@ Environment variables (`.env`):
 # GTFS API
 GTFS_API_URL=https://gateway.carris.pt/gateway/gtfs/api/v2.11/GTFS/realtime/vehiclepositions
 POLL_INTERVAL_SECONDS=30
+GTFS_SSL_VERIFY=true
+# Optional custom CA bundle path (PEM), useful in corporate/proxy environments
+GTFS_CA_BUNDLE_PATH=
 
 # Redis
 REDIS_HOST=localhost
@@ -253,6 +256,23 @@ REDIS_DB=0
 APP_NAME=Carris Vehicle Ingestion
 LOG_LEVEL=INFO
 ```
+
+### SSL Certificate Troubleshooting
+
+If you see errors like `CERTIFICATE_VERIFY_FAILED`, set a CA bundle that trusts your network/proxy certificate:
+
+```env
+GTFS_SSL_VERIFY=true
+GTFS_CA_BUNDLE_PATH=/path/to/your/ca-bundle.pem
+```
+
+For local debugging only, you can temporarily disable certificate verification:
+
+```env
+GTFS_SSL_VERIFY=false
+```
+
+Do not use `GTFS_SSL_VERIFY=false` in production.
 
 ## 🧪 Testing
 

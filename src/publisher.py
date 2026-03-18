@@ -369,6 +369,12 @@ class DataPublisher:
                 if not actual_start_time:
                     actual_start_time = str(position.timestamp)
             
+            # Fallback: If new trip and no actual_start_time yet, use first position timestamp
+            # This handles buses that never report stop_sequence=1 (e.g., start reporting mid-route)
+            if is_new_trip and not actual_start_time:
+                actual_start_time = str(position.timestamp)
+                logger.debug(f"Vehicle {vehicle_id} new trip {position.trip_id}: using first position as actual_start_time")
+            
             # Create vehicle state
             vehicle_state = VehicleState(
                 vehicle_id=vehicle_id,

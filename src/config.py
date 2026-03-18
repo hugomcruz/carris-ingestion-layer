@@ -1,5 +1,6 @@
 """Configuration management using Pydantic Settings"""
 
+from typing import Optional
 from urllib.parse import quote_plus
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -16,6 +17,8 @@ class Settings(BaseSettings):
     # GTFS API Configuration
     gtfs_api_url: str = "https://gateway.carris.pt/gateway/gtfs/api/v2.11/GTFS/realtime/vehiclepositions"
     poll_interval_seconds: int = 30
+    gtfs_ssl_verify: bool = True
+    gtfs_ca_bundle_path: Optional[str] = None
     
     # Redis Configuration
     redis_host: str = "localhost"

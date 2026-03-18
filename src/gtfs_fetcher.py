@@ -1,7 +1,7 @@
 """GTFS Real-time API fetcher for vehicle positions"""
 
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 import httpx
 from google.transit import gtfs_realtime_pb2
@@ -16,18 +16,38 @@ class GTFSFetcher:
     Fetches protobuf data from the Carris GTFS API endpoint
     """
     
-    def __init__(self, api_url: str, timeout: int = 10):
+    def __init__(
+        self,
+        api_url: str,
+        timeout: int = 10,
+        ssl_verify: bool = True,
+        ca_bundle_path: Optional[str] = None,
+    ):
         self.api_url = api_url
         self.timeout = timeout
+        self.ssl_verify = ssl_verify
+        self.ca_bundle_path = ca_bundle_path
         self.client: Optional[httpx.AsyncClient] = None
+
+    def _verify_config(self) -> Union[bool, str]:
+        """Build TLS verification config for httpx."""
+        if self.ca_bundle_path:
+            return self.ca_bundle_path
+        return self.ssl_verify
         
     async def connect(self):
         """Initialize HTTP client"""
         self.client = httpx.AsyncClient(
             timeout=self.timeout,
-            follow_redirects=True
+            follow_redirects=True,
+            verify=self._verify_config(),
         )
-        logger.info(f"GTFS Fetcher initialized for: {self.api_url}")
+        logger.info(
+            "GTFS Fetcher initialized for: %s (ssl_verify=%s, ca_bundle=%s)",
+            self.api_url,
+            self.ssl_verify,
+            self.ca_bundle_path or "default",
+        )
         
     async def disconnect(self):
         """Close HTTP client"""
@@ -62,7 +82,12 @@ class GTFSFetcher:
             return None
             
         except httpx.RequestError as e:
-            logger.error(f"Request error fetching vehicle positions: {e}")
+            logger.error(
+                "Request error fetching vehicle positions: %s (ssl_verify=%s, ca_bundle=%s)",
+                e,
+                self.ssl_verify,
+                self.ca_bundle_path or "default",
+            )
             return None
             
         except Exception as e:

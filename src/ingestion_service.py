@@ -31,7 +31,11 @@ class IngestionService:
     def __init__(self):
         # Initialize components
         self.redis_client = RedisClient(settings.redis_url)
-        self.gtfs_fetcher = GTFSFetcher(settings.gtfs_api_url)
+        self.gtfs_fetcher = GTFSFetcher(
+            settings.gtfs_api_url,
+            ssl_verify=settings.gtfs_ssl_verify,
+            ca_bundle_path=settings.gtfs_ca_bundle_path,
+        )
         self.gtfs_enrichment = GTFSEnrichment(
             settings.db_url, 
             settings.gtfs_refresh_hour
